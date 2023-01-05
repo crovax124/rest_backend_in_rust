@@ -3,6 +3,8 @@ use std::io::Read;
 use crate::http::Request;
 use std::convert::TryFrom;
 
+
+
 pub struct Server {
     address: String,
 }
@@ -30,7 +32,9 @@ impl Server {
 
 
                           match Request::try_from(&buffer[..]) {
-                              Ok(result) => {}
+                              Ok(request) => {
+                                  dbg!(request);
+                              }
                               Err(e) => println!("Failed to parse a request: {}", e),
                           }
                         }

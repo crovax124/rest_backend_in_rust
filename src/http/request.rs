@@ -5,12 +5,13 @@ use std::fmt::{Debug, Display, Formatter};
 use std::fmt::Result as FmtResult;
 use std::str;
 use std::str::Utf8Error;
+use super::{QueryString};
 
-
+#[derive(Debug)]
 pub struct Request<'buf> {
     path: &'buf str,
     //option is whether none or some value of the Type specified
-    query_string: Option<&'buf str>,
+    query_string: Option<QueryString<'buf>>,
     method: Method,
 }
 
@@ -37,12 +38,12 @@ impl<'buf> TryFrom<&'buf [u8]> for Request<'buf> {
         let method: Method = method.parse()?;
         let mut query_string = None;
         if let Some(i) = path.find('?'){
-            query_string = Some(&path[i+1..]);
+            query_string = Some(QueryString::from(&path[i+1..]));
             path = &path[..i];
         }
    Ok(Self{
        path,
-       query_string: None,
+       query_string,
        method,
    })
     }

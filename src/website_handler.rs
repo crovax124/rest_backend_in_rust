@@ -1,10 +1,46 @@
-use crate::http::{ParseError, Request, Response, StatusCode};
+use crate::http::{Method, Request, Response, StatusCode};
 use super::server::Handler;
+use std::fs;
+pub struct WebsiteHandler {
+    public_path: String,
+}
 
-pub struct WebsiteHandler;
+impl WebsiteHandler {
+    pub fn new(public_path: String) -> Self {
+        Self { public_path }
+    }
+
+    fn read_file(&self,file_path:&str) -> Option<String> {
+        let path = format!("{}/{}",self.public_path, file_path);
+
+        match fs::canonicalize(path) {
+            Ok(path) => {
+                if path.starts_with(&self.public_path) {
+                    fs::read_to_string(path).ok()
+                } else {
+                    println!("Directory Traversal Attack Attempted: {}", file_path);
+                    None
+                }
+            }
+            Err(_) => None,
+        }
+    }
+}
 
 impl Handler for WebsiteHandler {
     fn handle_request(&mut self, request: &Request) -> Response {
-   Response::new(StatusCode::Ok, Some("TEST".to_string()))
+        match request.method() {
+            Method::GET => match request.path() {
+                "/" => Response::new(StatusCode::Ok, self.read_file("index.html")),
+                "/hello" => Response::new(StatusCode::Ok, self.read_file("hello.html")),
+                "/bertrand" => Response::new(StatusCode::Ok, Some("Hallo Team, das Routing funktioniert =) !!!".to_string())),
+                path => match self.read_file(path) {
+                    None => Response::new(StatusCode::NotFound, self.read_file("404.html")),
+                    Some(contents) => Response::new(StatusCode::Ok, Some(contents)),
+                }
+            }
+            _=> Response::new(StatusCode::NotFound, self.read_file("404.html")),
+        }
+
     }
 }

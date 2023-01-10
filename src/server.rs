@@ -33,7 +33,7 @@ impl Server {
                     println!("Connection established on {}: ", address);
                     let mut buffer = [0; 1024];
                     match stream.read(&mut buffer) {
-                        Ok(result) => {
+                        Ok(_result) => {
                             println!("Recieved a request: {}", String::from_utf8_lossy(&buffer));
 
 
